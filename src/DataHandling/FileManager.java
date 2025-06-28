@@ -92,7 +92,7 @@ public class FileManager {
 
         // Add the data to the last page in a table or create a new one if it is full
         ArrayList<String> fileNames = getFileNames(tableDir);
-        String lastPageDir = tableDir + SLASH + fileNames.get(LASTPAGE);
+        String lastPageDir = tableDir + SLASH + fileNames.get(fileNames.size()-2);
 
         // Get the last page
         Page page;
