@@ -11,8 +11,8 @@ public class Main {
         new File("./data").mkdirs();
 
         ArrayList<String> schema = new ArrayList<>();
+
         FileManager.createDataBase("FirstDB");
         FileManager.createTable("FirstDB", "FirstTable", schema);
-
     }
 }
