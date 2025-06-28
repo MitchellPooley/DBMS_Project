@@ -10,5 +10,9 @@ public class TableSchema implements Serializable {
         this.schema = schema;
     }
 
+    /**
+     * Returns a tables Schema
+     * @return ArrayList containing the Schema
+     */
     public ArrayList<String> getSchema() { return schema;}
 }

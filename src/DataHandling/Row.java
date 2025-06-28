@@ -12,6 +12,10 @@ public class Row implements Serializable {
         this.data = data;
     }
 
+    /**
+     * Returns a rows id.
+     * @return integer row id
+     */
     public int getId() { return id;}
     public ArrayList<String> getData() { return data;}
 }
