@@ -5,9 +5,9 @@ import java.util.ArrayList;
 
 public class Row implements Serializable {
     public int id;
-    public ArrayList<String> data = new ArrayList<>();
+    public ArrayList<Object> data = new ArrayList<>();
 
-    public Row(int id, ArrayList<String> data) {
+    public Row(int id, ArrayList<Object> data) {
         this.id = id;
         this.data = data;
     }
@@ -17,5 +17,5 @@ public class Row implements Serializable {
      * @return integer row id
      */
     public int getId() { return id;}
-    public ArrayList<String> getData() { return data;}
+    public ArrayList<Object> getData() { return data;}
 }

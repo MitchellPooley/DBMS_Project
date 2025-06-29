@@ -10,10 +10,15 @@ public class Main {
         // Ensure data file exists and create a new file if not
         new File("./data").mkdirs();
 
-        ArrayList<String> schema = new ArrayList<>();
+        ArrayList<String> rowName = new ArrayList<>();
+        rowName.add("Boolean");
+        ArrayList<Class<?>> rowType = new ArrayList<>();
+        rowType.add(Boolean.class);
+        ArrayList<String> data = new ArrayList<>();
+        data.add("false");
 
-        FileManager.createDataBase("FirstDB");
-        FileManager.createTable("FirstDB", "FirstTable", schema);
-        FileManager.createRow("FirstDB", "FirstTable", new ArrayList<String>());
+        FileManager.createDataBase("SecondDB");
+        FileManager.createTable("SecondDB", "SecondTable", rowName, rowType);
+        FileManager.createRow("SecondDB", "SecondTable", data);
     }
 }

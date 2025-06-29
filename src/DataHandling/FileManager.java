@@ -10,7 +10,8 @@ public class FileManager {
     private static final String SCHEMADIR  = "/schema";
     private static final String FIRSTBLOCK = "/page1";
     private static final int    LASTPAGE   = -2;
-    private static final int    LASTROW    = -1;
+    private static final int    ISVALID    = 0;
+    private static final int    NEWDATA    = 1;
 
     /**
      * Create a new database, represented by a folder that can contain tables.
@@ -30,10 +31,11 @@ public class FileManager {
      * Represented by a folder that contains a Schema and can contain blocks.
      * @param databaseName Name of the database containing the table
      * @param tableName Name of the table to be created
-     * @param schema Table Schema
+     * @param rowName Table row names
+     * @param rowType Table row types
      * @throws IOException Produced by failed or interrupted I/O operations.
      */
-    public static void createTable(String databaseName, String tableName, ArrayList<String> schema) throws IOException {
+    public static void createTable(String databaseName, String tableName, ArrayList<String> rowName, ArrayList<Class<?>> rowType) throws IOException {
         // Check the database exists
         String databaseDir = checkForDatabase(databaseName);
         if (databaseDir == null) {
@@ -48,7 +50,7 @@ public class FileManager {
 
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
                     databaseDir + SLASH + tableName + SCHEMADIR))) {
-                out.writeObject(new TableSchema(schema));
+                out.writeObject(new TableSchema(rowName, rowType));
             }
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
                     databaseDir + SLASH + tableName + FIRSTBLOCK))) {
@@ -85,14 +87,19 @@ public class FileManager {
         String tableDir = databaseDir + SLASH + tableName;
 
         // Check data fits the table schema
-        if (!isValidData(data, tableDir)) {
+        ArrayList<Object> result = convertData(data, tableDir);
+        ArrayList<Object> convertedData;
+        if (! (Boolean) result.get(ISVALID)) {
             System.out.println("ERROR: The provided data does not fit the tables schema");
             return;
+        }
+        else {
+            convertedData = (ArrayList<Object>) result.get(NEWDATA);
         }
 
         // Add the data to the last page in a table or create a new one if it is full
         ArrayList<String> fileNames = getFileNames(tableDir);
-        String lastPageDir = tableDir + SLASH + fileNames.get(fileNames.size()-2);
+        String lastPageDir = tableDir + SLASH + fileNames.get(fileNames.size() + LASTPAGE);
 
         // Get the last page
         Page page;
@@ -106,14 +113,14 @@ public class FileManager {
             id = 0;
         }
         else {
-            id = page.getRow(LASTROW).getId() + 1;
+            id = page.getLastRow().getId() + 1;
         }
 
         // Add row to a new page, if last page is full
         if (page.isFull()) {
             String newPageDir = lastPageDir.substring(0, lastPageDir.length() - 1) + fileNames.size();
             page = new Page();
-            page.addRow(new Row(id, data));
+            page.addRow(new Row(id, convertedData));
 
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(newPageDir))) {
                 out.writeObject(page);
@@ -123,7 +130,7 @@ public class FileManager {
         }
 
         // Add row to the old page, if there is room
-        page.addRow(new Row(id, data));
+        page.addRow(new Row(id, convertedData));
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(lastPageDir))) {
             out.writeObject(page);
             System.out.println("Data was successfully added to '" + databaseName + "'");
@@ -163,14 +170,77 @@ public class FileManager {
         }
     }
 
-    // TODO Change functionality to allow for non-string data types
-    public static Boolean isValidData(ArrayList<String> data, String tableDir) throws IOException, ClassNotFoundException {
+    /**
+     * Checks if the data fits the schema and converts it to the data types given in the schema.
+     * @param data Data to check
+     * @param tableDir Directory of the table being inserted into
+     * @return ArrayList containing a Boolean value (If the data is valid) and the converted data
+     * @throws IOException Produced by failed or interrupted I/O operations.
+     * @throws ClassNotFoundException Thrown when no definition for the class with the specified name could be found.
+     */
+    public static ArrayList<Object> convertData(ArrayList<String> data, String tableDir) throws IOException, ClassNotFoundException {
+        ArrayList<Object> result = new ArrayList<>();
         TableSchema schema;
+
+        // Read the schema
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(tableDir + SCHEMADIR))) {
             schema = (TableSchema) in.readObject();
         }
 
-        return schema.getSchema().size() == data.size();
+        // Check data length matches schema length
+        ArrayList<Class<?>> types = schema.getRowType();
+        if (types.size() != data.size()) {
+            result.add(false);
+            return result;
+        }
+        result.add(true);
+        result.add(new ArrayList<Object>());
+        ArrayList<Object> updatedData = (ArrayList<Object>) result.get(NEWDATA);
+
+        // Converts data to the correct type if possible, returns false if not
+        // Gross wall of if statements, but I don't know how to do this better
+        for (int i=0; i<data.size(); i++) {
+            if (types.get(i) == String.class) {
+                updatedData.add(data.get(i));
+            }
+            else if (types.get(i) == Integer.class) {
+                try {
+                    updatedData.add(Integer.parseInt(data.get(i)));
+                }
+                catch (NumberFormatException e) {
+                    result.set(ISVALID, false);
+                    return result;
+                }
+            }
+            else if (types.get(i) == Boolean.class) {
+                if (canConvertToBoolean(data.get(i))) {
+                    updatedData.add(Boolean.parseBoolean(data.get(i)));
+                }
+                else {
+                    result.set(ISVALID, false);
+                    return result;
+                }
+            }
+            else if (types.get(i) == Float.class) {
+                try {
+                    updatedData.add(Float.parseFloat(data.get(i)));
+                }
+                catch (NumberFormatException e) {
+                    result.set(ISVALID, false);
+                    return result;
+                }
+            }
+        }
+
+        return result;
     }
 
+    /**
+     * Checks if a string can be converted to a Boolean.
+     * @param str String to check.
+     * @return Boolean value
+     */
+    public static boolean canConvertToBoolean(String str) {
+        return "true".equalsIgnoreCase(str) || "false".equalsIgnoreCase(str);
+    }
 }
