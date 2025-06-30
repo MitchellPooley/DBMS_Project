@@ -5,20 +5,44 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FileManager {
-    private static final String DATADIR    = "./data";
-    private static final String SLASH      = "/";
-    private static final String SCHEMADIR  = "/schema";
-    private static final String FIRSTBLOCK = "/page1";
-    private static final int    LASTPAGE   = -2;
-    private static final int    ISVALID    = 0;
-    private static final int    NEWDATA    = 1;
+    private static final String DATA_DIR    = "./data";
+    private static final String SLASH       = "/";
+    private static final String SCHEMA_DIR  = "/schema";
+    private static final String FIRST_BLOCK = "/page1";
+    private static final int    LAST_PAGE   = -2;
+    private static final int    IS_VALID    = 0;
+    private static final int    NEW_DATA    = 1;
+
+    private static String currentDataBaseDir;
+
+    /**
+     * Set the current database being handled
+     * @param databaseName name of said database
+     */
+    public static void setCurrentDataBaseDir(String databaseName) {
+
+        // Check that database exists
+        if (getFileNames(DATA_DIR).contains(databaseName)) {
+            FileManager.currentDataBaseDir = DATA_DIR + SLASH + databaseName;
+        } else {
+            System.out.println("ERROR: No database with the name '" + databaseName + "' exists");
+        }
+    }
+
+    /**
+     * Get the current database directory
+     * @return String containing the path
+     */
+    public static String getCurrentDataBaseDir() {
+        return currentDataBaseDir;
+    }
 
     /**
      * Create a new database, represented by a folder that can contain tables.
      * @param databaseName Name of the database to be created
      */
     public static void createDataBase(String databaseName) {
-        if (new File(DATADIR + SLASH + databaseName).mkdirs()) {
+        if (new File(DATA_DIR + SLASH + databaseName).mkdirs()) {
             System.out.println("Database '" + databaseName + "' was created");
         }
         else {
@@ -29,18 +53,14 @@ public class FileManager {
     /**
      * Creates a new table within a database folder.
      * Represented by a folder that contains a Schema and can contain blocks.
-     * @param databaseName Name of the database containing the table
      * @param tableName Name of the table to be created
-     * @param rowName Table row names
-     * @param rowType Table row types
+     * @param columnNames Table row names
+     * @param columnType Table row types
      * @throws IOException Produced by failed or interrupted I/O operations.
      */
-    public static void createTable(String databaseName, String tableName, ArrayList<String> rowName, ArrayList<Class<?>> rowType) throws IOException {
+    public static void createTable(String tableName, ArrayList<String> columnNames, ArrayList<Class<?>> columnType) throws IOException {
         // Check the database exists
-        String databaseDir = checkForDatabase(databaseName);
-        if (databaseDir == null) {
-            return;
-        }
+        String databaseDir = getCurrentDataBaseDir();
 
         // Create table if no table of the same name exists
         if (!getFileNames(databaseDir).contains(tableName)) {
@@ -49,11 +69,11 @@ public class FileManager {
             }
 
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
-                    databaseDir + SLASH + tableName + SCHEMADIR))) {
-                out.writeObject(new TableSchema(rowName, rowType));
+                    databaseDir + SLASH + tableName + SCHEMA_DIR))) {
+                out.writeObject(new Schema(columnNames, columnType));
             }
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
-                    databaseDir + SLASH + tableName + FIRSTBLOCK))) {
+                    databaseDir + SLASH + tableName + FIRST_BLOCK))) {
                 out.writeObject(new Page());
                 System.out.println("Database '" + tableName + "' was created");
             }
@@ -65,19 +85,14 @@ public class FileManager {
 
     /**
      * Adds a new row to a table and gives it a unique id
-     * @param databaseName Name of the database being inserted into
      * @param tableName Name of the table being inserted into
      * @param data Data being inserted
      * @throws IOException Produced by failed or interrupted I/O operations.
      * @throws ClassNotFoundException Thrown when no definition for the class with the specified name could be found.
      */
-    public static void createRow(String databaseName, String tableName, ArrayList<String> data) throws IOException, ClassNotFoundException {
+    public static void createRow(String tableName, ArrayList<String> data) throws IOException, ClassNotFoundException {
         // Check the database exists
-        String databaseDir = checkForDatabase(databaseName);
-        if (databaseDir == null) {
-            System.out.println("ERROR: Database with the name '" + databaseName + "' does not exist");
-            return;
-        }
+        String databaseDir = getCurrentDataBaseDir();
 
         // Check that the table exists
         if (!getFileNames(databaseDir).contains(tableName)) {
@@ -89,17 +104,17 @@ public class FileManager {
         // Check data fits the table schema
         ArrayList<Object> result = convertData(data, tableDir);
         ArrayList<Object> convertedData;
-        if (! (Boolean) result.get(ISVALID)) {
+        if (! (Boolean) result.get(IS_VALID)) {
             System.out.println("ERROR: The provided data does not fit the tables schema");
             return;
         }
         else {
-            convertedData = (ArrayList<Object>) result.get(NEWDATA);
+            convertedData = (ArrayList<Object>) result.get(NEW_DATA);
         }
 
         // Add the data to the last page in a table or create a new one if it is full
         ArrayList<String> fileNames = getFileNames(tableDir);
-        String lastPageDir = tableDir + SLASH + fileNames.get(fileNames.size() + LASTPAGE);
+        String lastPageDir = tableDir + SLASH + fileNames.get(fileNames.size() + LAST_PAGE);
 
         // Get the last page
         Page page;
@@ -124,7 +139,7 @@ public class FileManager {
 
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(newPageDir))) {
                 out.writeObject(page);
-                System.out.println("Data was successfully added to '" + databaseName + "'");
+                System.out.println("Data was successfully added to '" + tableName + "'");
             }
             return;
         }
@@ -133,7 +148,7 @@ public class FileManager {
         page.addRow(new Row(id, convertedData));
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(lastPageDir))) {
             out.writeObject(page);
-            System.out.println("Data was successfully added to '" + databaseName + "'");
+            System.out.println("Data was successfully added to '" + tableName + "'");
         }
     }
 
@@ -156,21 +171,6 @@ public class FileManager {
     }
 
     /**
-     * Checks if the given database exists
-     * @param databaseName Database to check
-     * @return The directory of said database
-     */
-    public static String checkForDatabase(String databaseName) {
-        // Check that database exists
-        if (getFileNames(DATADIR).contains(databaseName)) {
-            return DATADIR + SLASH + databaseName;
-        } else {
-            System.out.println("ERROR: No database with the name '" + databaseName + "' exists");
-            return null;
-        }
-    }
-
-    /**
      * Checks if the data fits the schema and converts it to the data types given in the schema.
      * @param data Data to check
      * @param tableDir Directory of the table being inserted into
@@ -180,11 +180,11 @@ public class FileManager {
      */
     public static ArrayList<Object> convertData(ArrayList<String> data, String tableDir) throws IOException, ClassNotFoundException {
         ArrayList<Object> result = new ArrayList<>();
-        TableSchema schema;
+        Schema schema;
 
         // Read the schema
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(tableDir + SCHEMADIR))) {
-            schema = (TableSchema) in.readObject();
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(tableDir + SCHEMA_DIR))) {
+            schema = (Schema) in.readObject();
         }
 
         // Check data length matches schema length
@@ -195,7 +195,7 @@ public class FileManager {
         }
         result.add(true);
         result.add(new ArrayList<Object>());
-        ArrayList<Object> updatedData = (ArrayList<Object>) result.get(NEWDATA);
+        ArrayList<Object> updatedData = (ArrayList<Object>) result.get(NEW_DATA);
 
         // Converts data to the correct type if possible, returns false if not
         // Gross wall of if statements, but I don't know how to do this better
@@ -208,7 +208,7 @@ public class FileManager {
                     updatedData.add(Integer.parseInt(data.get(i)));
                 }
                 catch (NumberFormatException e) {
-                    result.set(ISVALID, false);
+                    result.set(IS_VALID, false);
                     return result;
                 }
             }
@@ -217,7 +217,7 @@ public class FileManager {
                     updatedData.add(Boolean.parseBoolean(data.get(i)));
                 }
                 else {
-                    result.set(ISVALID, false);
+                    result.set(IS_VALID, false);
                     return result;
                 }
             }
@@ -226,7 +226,7 @@ public class FileManager {
                     updatedData.add(Float.parseFloat(data.get(i)));
                 }
                 catch (NumberFormatException e) {
-                    result.set(ISVALID, false);
+                    result.set(IS_VALID, false);
                     return result;
                 }
             }
@@ -242,5 +242,20 @@ public class FileManager {
      */
     public static boolean canConvertToBoolean(String str) {
         return "true".equalsIgnoreCase(str) || "false".equalsIgnoreCase(str);
+    }
+
+    private static Page getPage(String pageName) throws FileNotFoundException {
+        String databaseDir = getCurrentDataBaseDir();
+        String pageDir = databaseDir + SLASH + pageName;
+
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(pageDir))) {
+            return (Page) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Row getRow(String pageName, int rowIndex) throws FileNotFoundException {
+        return getPage(pageName).getRow(rowIndex);
     }
 }

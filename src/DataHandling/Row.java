@@ -17,5 +17,22 @@ public class Row implements Serializable {
      * @return integer row id
      */
     public int getId() { return id;}
+
+    /**
+     * Returns the rows data.
+     * @return ArrayList of data
+     */
     public ArrayList<Object> getData() { return data;}
+
+    public ArrayList<String> getAsString() {
+        ArrayList<String> stringData = new ArrayList<>();
+        for (Object value: data) {
+            if (value instanceof String) {
+                stringData.add((String) value);
+            } else {
+                stringData.add(String.valueOf(value));
+            }
+        }
+        return stringData;
+    }
 }
