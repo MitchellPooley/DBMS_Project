@@ -4,25 +4,25 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Schema implements Serializable {
-    private final ArrayList<String> rowName;
-    private final ArrayList<Class<?>> rowType;
+    private final ArrayList<String> columnName;
+    private final ArrayList<Class<?>> columnType;
 
-    public Schema(ArrayList<String> rowName, ArrayList<Class<?>> rowType) {
-        this.rowName = rowName;
-        this.rowType = rowType;
+    public Schema(ArrayList<String> columnName, ArrayList<Class<?>> columnType) {
+        this.columnName = columnName;
+        this.columnType = columnType;
     }
 
     /**
      * Returns the row names of the schema.
      * @return Arraylist containing the names
      */
-    public ArrayList<String> getRowName() { return rowName;}
+    public ArrayList<String> getColumnName() { return columnName;}
 
     /**
      * Returns the row types of the schema.
      * @return ArrayList containing the types
      */
-    public ArrayList<Class<?>> getRowType() { return rowType;}
+    public ArrayList<Class<?>> getColumnType() { return columnType;}
 
-    public int size() { return rowName.size();}
+    public int size() { return columnName.size();}
 }

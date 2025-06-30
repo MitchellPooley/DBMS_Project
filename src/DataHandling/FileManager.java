@@ -5,15 +5,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FileManager {
-    private static final String DATA_DIR    = "./data";
-    private static final String SLASH       = "/";
+    public  static final String DATA_DIR    = "./data";
+    public  static final String SLASH       = "/";
     private static final String SCHEMA_DIR  = "/schema";
     private static final String FIRST_BLOCK = "/page1";
-    private static final int    LAST_PAGE   = -2;
+    private static final String INDEX_FILE  = "/index";
+    private static final String TABLE_STATS = "/tableStats";
+    private static final int    LAST_PAGE   = -3;
     private static final int    IS_VALID    = 0;
     private static final int    NEW_DATA    = 1;
 
     private static String currentDataBaseDir;
+
+    //TODO Separate into cohesive classes
+    //TODO Add primary key functionality
 
     /**
      * Set the current database being handled
@@ -68,6 +73,10 @@ public class FileManager {
                 System.out.println("ERROR: Table failed to generate, try again please");
             }
 
+            if (!new File(databaseDir + SLASH + tableName + INDEX_FILE).mkdirs()) {
+                System.out.println("ERROR: Table failed to generate, try again please");
+            }
+
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
                     databaseDir + SLASH + tableName + SCHEMA_DIR))) {
                 out.writeObject(new Schema(columnNames, columnType));
@@ -75,6 +84,10 @@ public class FileManager {
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
                     databaseDir + SLASH + tableName + FIRST_BLOCK))) {
                 out.writeObject(new Page());
+            }
+            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
+                    databaseDir + SLASH + tableName + TABLE_STATS))) {
+                out.writeObject(new TableStats(columnType, tableName));
                 System.out.println("Database '" + tableName + "' was created");
             }
         }
@@ -112,6 +125,12 @@ public class FileManager {
             convertedData = (ArrayList<Object>) result.get(NEW_DATA);
         }
 
+        TableStats tableStats;
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(databaseDir + TABLE_STATS))) {
+            tableStats = (TableStats) in.readObject();
+            tableStats.addRow();
+        }
+
         // Add the data to the last page in a table or create a new one if it is full
         ArrayList<String> fileNames = getFileNames(tableDir);
         String lastPageDir = tableDir + SLASH + fileNames.get(fileNames.size() + LAST_PAGE);
@@ -122,6 +141,7 @@ public class FileManager {
             page = (Page) in.readObject();
         }
 
+        //TODO Potentially unneeded, potentially need to make unique across all pages. TBD
         // Get the new rows id
         int id;
         if (page.isEmpty()) {
@@ -133,6 +153,11 @@ public class FileManager {
 
         // Add row to a new page, if last page is full
         if (page.isFull()) {
+            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(databaseDir + TABLE_STATS))) {
+                tableStats = (TableStats) in.readObject();
+                tableStats.addPage();
+            }
+
             String newPageDir = lastPageDir.substring(0, lastPageDir.length() - 1) + fileNames.size();
             page = new Page();
             page.addRow(new Row(id, convertedData));
@@ -188,7 +213,7 @@ public class FileManager {
         }
 
         // Check data length matches schema length
-        ArrayList<Class<?>> types = schema.getRowType();
+        ArrayList<Class<?>> types = schema.getColumnType();
         if (types.size() != data.size()) {
             result.add(false);
             return result;

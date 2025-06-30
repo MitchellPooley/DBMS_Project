@@ -4,8 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Row implements Serializable {
-    public int id;
-    public ArrayList<Object> data = new ArrayList<>();
+    private int id;
+    private ArrayList<Object> data = new ArrayList<>();
 
     public Row(int id, ArrayList<Object> data) {
         this.id = id;
@@ -24,6 +24,10 @@ public class Row implements Serializable {
      */
     public ArrayList<Object> getData() { return data;}
 
+    /**
+     * Returns the row data as String objects.
+     * @return Data as an ArrayList of Strings
+     */
     public ArrayList<String> getAsString() {
         ArrayList<String> stringData = new ArrayList<>();
         for (Object value: data) {

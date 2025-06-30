@@ -17,8 +17,9 @@ public class Main {
         ArrayList<String> data = new ArrayList<>();
         data.add("false");
 
-//        FileManager.createDataBase("SecondDB");
-//        FileManager.createTable( "SecondTable", columnNames, columnType);
-//        FileManager.createRow( "SecondTable", data);
+        FileManager.createDataBase("DB");
+        FileManager.setCurrentDataBaseDir("DB");
+        FileManager.createTable( "Table", columnNames, columnType);
+        FileManager.createRow( "Table", data);
     }
 }
