@@ -28,22 +28,37 @@ public class TableStats implements Serializable {
         }
     }
 
+    /**
+     * Increases the count of rows
+     */
     public void addRow() {
         numRows++;
     }
 
+    /**
+     * Decreases the count of rows
+     */
     public void removeRow() {
         numRows--;
     }
 
+    /**
+     * Increases the count of pages
+     */
     public void addPage() {
         numPages++;
     }
 
+    /**
+     * Decreases the count of pages
+     */
     public void removePage() {
         numPages--;
     }
 
+    /**
+     * Analyses the table and updates the table stats
+     */
     public void analyzeTable() {
         numRows = 0;
         numPages = 0;
@@ -61,7 +76,11 @@ public class TableStats implements Serializable {
             }
         }
     }
-    
+
+    /**
+     * Updates table stats for a single row.
+     * @param data Data from a single row
+     */
     private void analyseRow(ArrayList<Object> data) {
         numRows++;
         for (int i=0; i<data.size(); i++) {
@@ -97,13 +116,39 @@ public class TableStats implements Serializable {
         }
     }
 
+    /**
+     * Gets the minValue in each column.
+     * @return Arraylist of values
+     */
     public ArrayList<Object> getMinValue() { return minValue;}
 
+    /**
+     * Gets the maxValue in each column.
+     * @return Arraylist of values
+     */
     public ArrayList<Object> getMaxValue() { return maxValue;}
 
+    /**
+     * Gets the unique values in the table.
+     * @return ArrayList of sets containing each value.
+     */
     public ArrayList<Set<Object>> getUnique() { return unique;}
 
+    /**
+     * Gets the number of rows in the table,
+     * @return int number of rows
+     */
     public int getNumRows() { return numRows;}
 
+    /**
+     * Gets the number of pages in the table,
+     * @return int number of pages
+     */
     public int getNumPages() { return numPages;}
+
+    /**
+     * Gets the tables column types,
+     * @return ArrayList of Classes
+     */
+    public ArrayList<Class<?>> getColumnType() { return columnType;}
 }
