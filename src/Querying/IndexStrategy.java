@@ -1,10 +1,12 @@
 package Querying;
 
-public interface IndexStrategy {
-    public int CalculateIO();
-    public int CalculateSize();
+import DataHandling.TableStats;
 
-    public int CalculateRFEqual();
-    public int CalculateRFGreater();
-    public int CalculateRFLess();
+public interface IndexStrategy {
+    public int CalculateIO(TableStats stats, String predicate);
+    public int CalculateSize(TableStats stats, String predicate);
+
+    public int CalculateRFEqual(TableStats stats);
+    public int CalculateRFGreater(TableStats stats);
+    public int CalculateRFLess(TableStats stats);
 }

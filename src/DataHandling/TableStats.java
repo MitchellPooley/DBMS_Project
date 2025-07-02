@@ -96,4 +96,14 @@ public class TableStats implements Serializable {
             }
         }
     }
+
+    public ArrayList<Object> getMinValue() { return minValue;}
+
+    public ArrayList<Object> getMaxValue() { return maxValue;}
+
+    public ArrayList<Set<Object>> getUnique() { return unique;}
+
+    public int getNumRows() { return numRows;}
+
+    public int getNumPages() { return numPages;}
 }
