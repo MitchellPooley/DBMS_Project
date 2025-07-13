@@ -30,7 +30,7 @@ public class HeapIndex extends ParentIndex{
      */
     @Override
     public int CalculateIO(int colIndex, String predicate, Object value, TableStats stats) {
-        return stats.getNumRows();
+        return stats.getNumPages();
     }
 
     /**
@@ -59,9 +59,9 @@ public class HeapIndex extends ParentIndex{
                 // Checks equality if a predicate is greater than or equal / less than or equal
                 boolean included = false;
                 if (inclusive) {
-                    included = compareOnPred(EQUAL, row, colIndex, value, columnType);
+                    included = compareOnPred(EQUAL, row.getData().get(colIndex), value, columnType);
                 }
-                if (compareOnPred(predicate, row, colIndex, value, columnType) || included) {
+                if (included || compareOnPred(predicate, row.getData().get(colIndex), value, columnType)) {
                     result.addRow(row);
                 }
             }

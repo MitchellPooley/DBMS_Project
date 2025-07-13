@@ -25,15 +25,12 @@ public abstract class ParentIndex implements IndexStrategy {
     @Override
     public int CalculateSize(int colIndex, String predicate, Object value, TableStats stats) {
         double rf = RF_MAGIC;
-        if (Objects.equals(predicate, EQUAL)) {
-            rf = CalculateRFEqual(stats, colIndex);
-        }
-        else if (predicate.equals(GREATER)) {
-            rf = CalculateRFGreater(stats, colIndex, value);
-        }
-        else if (predicate.equals(LESSER)) {
-            rf = CalculateRFLess(stats, colIndex, value);
-        }
+        rf = switch (predicate) {
+            case EQUAL -> CalculateRFEqual(stats, colIndex);
+            case GREATER -> CalculateRFGreater(stats, colIndex, value);
+            case LESSER -> CalculateRFLess(stats, colIndex, value);
+            default -> rf;
+        };
         return (int) Math.ceil(rf * stats.getNumRows());
     }
 
@@ -103,66 +100,64 @@ public abstract class ParentIndex implements IndexStrategy {
     /**
      * returns true if indexed data in a row is equal/greater/lesser than the given value.
      * @param predicate equal/greater/lesser
-     * @param row table row, includes data to be queried
-     * @param colIndex column of data to be compared
+     * @param data data in table to be compared
      * @param value value to be compared against
      * @param columnType type of value in the indexed column
      * @return boolean
      */
-    protected boolean compareOnPred(String predicate, Row row, int colIndex, Object value, Class<?> columnType) {
+    protected boolean compareOnPred(String predicate, Object data, Object value, Class<?> columnType) {
         if (columnType == Integer.class) {
             switch (predicate) {
                 case EQUAL -> {
-                    if (row.getData().get(colIndex) == null) {
+                    if (data == null) {
                         return false;
                     }
-                    return (Integer) row.getData().get(colIndex) == (Integer) value;
+                    return (int) data == (int) value;
                 }
                 case GREATER -> {
-                    if (row.getData().get(colIndex) == null) {
+                    if (data == null) {
                         return false;
                     }
-                    return (Integer) row.getData().get(colIndex) > (Integer) value;
+                    return (Integer) data > (Integer) value;
                 }
                 case LESSER -> {
-                    if (row.getData().get(colIndex) == null) {
+                    if (data == null) {
                         return false;
                     }
-                    return (Integer) row.getData().get(colIndex) < (Integer) value;
+                    return (Integer) data < (Integer) value;
                 }
             }
         }
         if (columnType == Float.class) {
             switch (predicate) {
                 case EQUAL -> {
-                    if (row.getData().get(colIndex) == null) {
+                    if (data == null) {
                         return false;
                     }
-                    return (Float) row.getData().get(colIndex) == (Float) value;
+                    return (float) data == (float) value;
                 }
                 case GREATER -> {
-                    if (row.getData().get(colIndex) == null) {
+                    if (data == null) {
                         return false;
                     }
-                    return (Float) row.getData().get(colIndex) > (Float) value;
+                    return (Float) data > (Float) value;
                 }
                 case LESSER -> {
-                    if (row.getData().get(colIndex) == null) {
+                    if (data == null) {
                         return false;
                     }
-                    return (Float) row.getData().get(colIndex) < (Float) value;
+                    return (Float) data < (Float) value;
                 }
             }
         }
         if (columnType == String.class) {
             if (predicate.equals(EQUAL)) {
-                String data = (String) row.getData().get(colIndex);
                 return data.equals((String) value);
             }
         }
         if (columnType == Boolean.class) {
             if (predicate.equals(EQUAL)) {
-                return (Boolean) row.getData().get(colIndex) == (Boolean) value;
+                return (Boolean) data == (Boolean) value;
             }
         }
         return false;
