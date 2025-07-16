@@ -13,25 +13,39 @@ public class BPlusTreeKey implements Comparable<BPlusTreeKey>{
         this.dataType = dataType;
     }
 
+    /**
+     * Gets the keys value.
+     * @return String, Integer or Float value (Cannot create a BPlusTree with boolean value as it would be pointless)
+     */
     public Object getKey() { return key;}
 
+    /**
+     * Get the page directory of the row referenced to by the key.
+     * @return String
+     */
     public String getLocation() { return location;}
 
+    /**
+     * Get the index within the page, of the row referenced by the key.
+     * @return Integer index
+     */
     public int getIndex() { return index;}
 
+    /**
+     * Compare to method included in Comparable interface.
+     * @param treeKey the object to be compared.
+     * @return -1, 0, 1 for values less than, equal to and greater than, respectively
+     */
     @Override
-    public int compareTo(BPlusTreeKey o) {
+    public int compareTo(BPlusTreeKey treeKey) {
         if (dataType == Integer.class) {
-            return ((Integer) key).compareTo((Integer) o.getKey());
+            return ((Integer) key).compareTo((Integer) treeKey.getKey());
         }
         if (dataType == Float.class) {
-            return ((Float) key).compareTo((Float) o.getKey());
+            return ((Float) key).compareTo((Float) treeKey.getKey());
         }
         if (dataType == String.class) {
-            return ((String) key).compareTo((String) o.getKey());
-        }
-        if (dataType == Boolean.class) {
-            return ((Boolean) key).compareTo((Boolean) o.getKey());
+            return ((String) key).compareTo((String) treeKey.getKey());
         }
         return 0;
     }

@@ -1,3 +1,8 @@
+/**
+ * Credit: This class uses and builds upon code taken from GeeksforGeeks
+ * URL: https://www.geeksforgeeks.org/java/java-program-to-implement-b-tree/
+ */
+
 package Querying;
 
 import java.util.Collections;
@@ -17,7 +22,11 @@ public class BPlusTree {
         this.keyType = keyType;
     }
 
-    // Find the appropriate leaf node for insertion
+    /**
+     * Finds the leaf node that a given key belongs too.
+     * @param key key value referencing a row in a table
+     * @return leaf node
+     */
     private BPlusTreeNode findLeaf(BPlusTreeKey key) {
         BPlusTreeNode node = root;
         while (!node.isLeaf) {
@@ -31,6 +40,10 @@ public class BPlusTree {
         return node;
     }
 
+    /**
+     * Insert a new key into the tree.
+     * @param key key to be inserted
+     */
     public void insert(BPlusTreeKey key) {
         BPlusTreeNode leaf = findLeaf(key);
         insertIntoLeaf(leaf, key);
@@ -41,6 +54,11 @@ public class BPlusTree {
         }
     }
 
+    /**
+     * Insert the key into a leaf node.
+     * @param leaf Leaf node being inserted into
+     * @param key Key being inserted
+     */
     private void insertIntoLeaf(BPlusTreeNode leaf, BPlusTreeKey key) {
         int pos = Collections.binarySearch(leaf.keys, key);
         if (pos < 0) {
@@ -49,7 +67,10 @@ public class BPlusTree {
         leaf.keys.add(pos, key);
     }
 
-    // Split a leaf node and update parent nodes
+    /**
+     * Split  a leaf node and update its parents.
+     * @param leaf Leaf node to be split
+     */
     private void splitLeaf(BPlusTreeNode leaf) {
         int mid = (ORDER + 1) / 2;
         BPlusTreeNode newLeaf = new BPlusTreeNode(true);
@@ -73,7 +94,12 @@ public class BPlusTree {
         }
     }
 
-    // Insert into the parent node after a leaf split
+    /**
+     * Insert a key into a parent nodes when splitting the root.
+     * @param left Left node
+     * @param right Right node
+     * @param key Key to be inserted
+     */
     private void insertIntoParent(BPlusTreeNode left, BPlusTreeNode right, BPlusTreeKey key) {
         BPlusTreeNode parent = findParent(root, left);
 
@@ -95,7 +121,10 @@ public class BPlusTree {
         }
     }
 
-    // Split an internal node
+    /**
+     * Split an internal node.
+     * @param internal Node to be split
+     */
     private void splitInternal(BPlusTreeNode internal) {
         int mid = (ORDER + 1) / 2;
         BPlusTreeNode newInternal = new BPlusTreeNode(false);
@@ -120,7 +149,12 @@ public class BPlusTree {
         }
     }
 
-    // Find the parent node of a given node
+    /**
+     * Find the parent node of a given node.
+     * @param current Current node being checked
+     * @param target Child node whose parent is being searched for
+     * @return parent node.
+     */
     private BPlusTreeNode findParent(BPlusTreeNode current, BPlusTreeNode target) {
         if (current.isLeaf || current.children.isEmpty()) {
             return null;
@@ -144,24 +178,14 @@ public class BPlusTree {
         return null;
     }
 
-    // Search for a key in the B+ Tree
+    /**
+     * Checks if a key exists in the tree
+     * @param key Key being searched for
+     * @return Boolean
+     */
     public boolean search(BPlusTreeKey key) {
         BPlusTreeNode node = findLeaf(key);
         int pos = Collections.binarySearch(node.keys, key);
         return pos >= 0;
-    }
-
-    // Display the Tree (for debugging purposes)
-    public void printTree() {
-        printNode(root, 0);
-    }
-
-    private void printNode(BPlusTreeNode node, int level) {
-        System.out.println("Level " + level + ": " + node.keys);
-        if (!node.isLeaf) {
-            for (BPlusTreeNode child : node.children) {
-                printNode(child, level + 1);
-            }
-        }
     }
 }

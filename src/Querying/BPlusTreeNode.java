@@ -1,3 +1,8 @@
+/**
+ * Credit: This class uses and builds upon code taken from GeeksforGeeks
+ * URL: https://www.geeksforgeeks.org/java/java-program-to-implement-b-tree/
+ */
+
 package Querying;
 
 import java.util.ArrayList;
@@ -7,14 +12,10 @@ public class BPlusTreeNode {
     boolean isLeaf;
 
     List<BPlusTreeKey> keys;
-
-    // Children nodes (for internal nodes)
     List<BPlusTreeNode> children;
 
-    // Link to the next leaf node
     BPlusTreeNode next;
 
-    // Constructor to initialize a node
     public BPlusTreeNode(boolean isLeaf) {
         this.isLeaf = isLeaf;
         this.keys = new ArrayList<>();

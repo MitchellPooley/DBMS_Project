@@ -151,13 +151,21 @@ public abstract class ParentIndex implements IndexStrategy {
             }
         }
         if (columnType == String.class) {
+            String dataAsString = (String) data;
             if (predicate.equals(EQUAL)) {
-                return data.equals((String) value);
+                return dataAsString.equals((String) value);
+            }
+            if (predicate.equals(GREATER)) {
+                return dataAsString.compareTo((String) value) > 0;
+            }
+            if (predicate.equals(LESSER)) {
+                return dataAsString.compareTo((String) value) < 0;
             }
         }
         if (columnType == Boolean.class) {
+            Boolean dataAsBool = (Boolean) data;
             if (predicate.equals(EQUAL)) {
-                return (Boolean) data == (Boolean) value;
+                return dataAsBool == (Boolean) value;
             }
         }
         return false;
