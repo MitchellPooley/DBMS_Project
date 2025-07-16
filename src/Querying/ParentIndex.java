@@ -13,6 +13,7 @@ public abstract class ParentIndex implements IndexStrategy {
     final String EQUAL         = "Equals";
     final String GREATER       = "Greater";
     final String LESSER        = "Lesser";
+    final String SLASH         = "/";
 
     /**
      * Calculates the resulting size of a selection.

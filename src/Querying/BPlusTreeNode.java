@@ -22,4 +22,8 @@ public class BPlusTreeNode {
         this.children = new ArrayList<>();
         this.next = null;
     }
+
+    public List<BPlusTreeKey> getKeys() {return keys; }
+
+    public BPlusTreeNode getNext() {return next; }
 }

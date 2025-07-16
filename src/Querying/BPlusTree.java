@@ -27,7 +27,7 @@ public class BPlusTree {
      * @param key key value referencing a row in a table
      * @return leaf node
      */
-    private BPlusTreeNode findLeaf(BPlusTreeKey key) {
+    public BPlusTreeNode findLeaf(BPlusTreeKey key) {
         BPlusTreeNode node = root;
         while (!node.isLeaf) {
             int i = 0;
@@ -36,6 +36,14 @@ public class BPlusTree {
                 i++;
             }
             node = node.children.get(i);
+        }
+        return node;
+    }
+
+    public BPlusTreeNode getFirstNode() {
+        BPlusTreeNode node = root;
+        while (!node.isLeaf) {
+            node = node.children.get(0);
         }
         return node;
     }

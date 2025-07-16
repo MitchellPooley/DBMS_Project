@@ -2,13 +2,13 @@ package Querying;
 
 public class BPlusTreeKey implements Comparable<BPlusTreeKey>{
     private final Object key;
-    private final String location;
+    private final String pageName;
     private final int index;
     private final Class<?> dataType;
 
-    public BPlusTreeKey(Object key, String location, int index, Class<?> dataType) {
+    public BPlusTreeKey(Object key, String pageName, Integer index, Class<?> dataType) {
         this.key = key;
-        this.location = location;
+        this.pageName = pageName;
         this.index = index;
         this.dataType = dataType;
     }
@@ -23,7 +23,7 @@ public class BPlusTreeKey implements Comparable<BPlusTreeKey>{
      * Get the page directory of the row referenced to by the key.
      * @return String
      */
-    public String getLocation() { return location;}
+    public String getPageName() { return pageName;}
 
     /**
      * Get the index within the page, of the row referenced by the key.

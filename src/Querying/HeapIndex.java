@@ -35,7 +35,7 @@ public class HeapIndex extends ParentIndex{
 
     /**
      * Select rows from a table based on some predicate.
-     * @param colIndex Column being selected over
+     * @param indexName Column being selected over
      * @param predicate Predicate of the selection (Equals, Greater, Lesser)
      * @param inclusive If the predicate is inclusive (Greater/Lesser Than or Equal)
      * @param value Value being selected for
@@ -43,9 +43,12 @@ public class HeapIndex extends ParentIndex{
      * @param tableName Name of the table being selected over
      * @return QueryResult
      */
-    public QueryResult select(int colIndex, String predicate, Boolean inclusive, Object value, Schema schema, String tableName) {
-        String dir = FileManager.DATA_DIR + FileManager.SLASH + tableName;
+    public QueryResult select(String indexName, String predicate, Boolean inclusive, Object value, Schema schema, String tableName) {
+        String dir = FileManager.getCurrentDataBaseDir() + SLASH + tableName;
         QueryResult result = new QueryResult(schema);
+
+        int colIndex = schema.getColumnName().indexOf(indexName);
+        Class<?> columnType = schema.getColumnType().get(colIndex);
 
         for (int i=1; i<FileManager.getFileNames(dir).size()-NUM_NON_PAGES; i++) {
             Page page;
@@ -54,7 +57,6 @@ public class HeapIndex extends ParentIndex{
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
-            Class<?> columnType = schema.getColumnType().get(colIndex);
             for (Row row: page.getRows()) {
                 // Checks equality if a predicate is greater than or equal / less than or equal
                 boolean included = false;
