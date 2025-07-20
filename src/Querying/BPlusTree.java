@@ -5,9 +5,10 @@
 
 package Querying;
 
+import java.io.Serializable;
 import java.util.Collections;
 
-public class BPlusTree {
+public class BPlusTree implements Serializable {
     private final String EQUAL   = "Equal";
     private final String GREATER = "Greater";
     private final String LESSER  = "Lesser";
