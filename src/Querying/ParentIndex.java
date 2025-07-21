@@ -42,6 +42,9 @@ public abstract class ParentIndex implements IndexStrategy {
      * @return Reduction value
      */
     public double CalculateRFEqual(TableStats stats, int colIndex) {
+        if (!(stats.getUnique().size() >= colIndex)) {
+            return RF_MAGIC;
+        }
         int numUnique = stats.getUnique().get(colIndex).size();
         if (numUnique == 0) {
             return RF_MAGIC;

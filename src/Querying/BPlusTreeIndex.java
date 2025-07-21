@@ -48,12 +48,19 @@ public class BPlusTreeIndex extends ParentIndex {
      * @param predicate Predicate of the selection (Equals, Greater, Lesser)
      * @param inclusive If the predicate is inclusive (Greater/Lesser Than or Equal)
      * @param value Value being selected for
-     * @param schema Schema of the table before selection
      * @param tableName Name of the table being selected over
      * @return QueryResult
      */
     @Override
-    public QueryResult select(String indexName, String predicate, Boolean inclusive, Object value, Schema schema, String tableName) {
+    public QueryResult select(String indexName, String predicate, Boolean inclusive, Object value, String tableName) {
+        String tableDir = FileManager.getCurrentDataBaseDir() + SLASH + tableName;
+        Schema schema;
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(tableDir + SLASH + SCHEMA))) {
+            schema = (Schema) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         QueryResult result = new QueryResult(schema);
 
         int colIndex = schema.getColumnName().indexOf(indexName);
@@ -69,7 +76,7 @@ public class BPlusTreeIndex extends ParentIndex {
         }
         else {
             // Uses mostly null valued BPlusTreeKey as only the key value is required for finding the correct leaf
-            node = bPlusTree.findLeaf(new BPlusTreeKey(value, null, null, null));
+            node = bPlusTree.findLeaf(new BPlusTreeKey(value, null, 0, null));
 
             while(!compareOnPred(predicate, node.getKeys().get(i).getKey(), value, columnType) &&
                     (!inclusive || !compareOnPred(EQUAL, node.getKeys().get(i).getKey(), value, columnType))) {
@@ -132,7 +139,7 @@ public class BPlusTreeIndex extends ParentIndex {
         BPlusTree bPlusTree = new BPlusTree(dataType);
 
         // Insert keys into the tree
-        for (int i=1; i<FileManager.getFileNames(tableDir).size()-NUM_NON_PAGES; i++) {
+        for (int i=1; i<=FileManager.getFileNames(tableDir).size()-NUM_NON_PAGES; i++) {
             Page page;
             try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(tableDir + PAGE_DIR + i))) {
                 page = (Page) in.readObject();
@@ -140,15 +147,14 @@ public class BPlusTreeIndex extends ParentIndex {
                 throw new RuntimeException(e);
             }
 
-            for (int j = 0; j < Page.MAX_ROWS; j++) {
+            for (int j = 0; j < page.getRows().size(); j++) {
                 Row row = page.getRow(j);
                 bPlusTree.insert(new BPlusTreeKey(row.getData().get(colIndex), PAGE_DIR + i, j, dataType));
             }
         }
 
         // Save tree to memory
-        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(treeDir + SLASH + INDEXDIR +
-                SLASH + indexName + BPLUSNAME))) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(treeDir))) {
             out.writeObject(bPlusTree);
         } catch (IOException e) {
             throw new RuntimeException(e);

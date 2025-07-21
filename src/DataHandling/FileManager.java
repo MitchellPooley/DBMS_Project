@@ -14,6 +14,7 @@ public class FileManager {
     private static final int    LAST_PAGE   = -3;
     private static final int    IS_VALID    = 0;
     private static final int    NEW_DATA    = 1;
+    private static final int    PAGE_OFFSET = -2;
 
     private static String currentDataBaseDir;
 
@@ -47,10 +48,7 @@ public class FileManager {
      * @param databaseName Name of the database to be created
      */
     public static void createDataBase(String databaseName) {
-        if (new File(DATA_DIR + SLASH + databaseName).mkdirs()) {
-            System.out.println("Database '" + databaseName + "' was created");
-        }
-        else {
+        if (!new File(DATA_DIR + SLASH + databaseName).mkdirs()) {
             System.out.println("ERROR: A database with the name '" + databaseName + "' already exists");
         }
     }
@@ -69,13 +67,8 @@ public class FileManager {
 
         // Create table if no table of the same name exists
         if (!getFileNames(databaseDir).contains(tableName)) {
-            if (!new File(databaseDir + SLASH + tableName).mkdirs()) {
-                System.out.println("ERROR: Table failed to generate, try again please");
-            }
-
-            if (!new File(databaseDir + SLASH + tableName + INDEX_FILE).mkdirs()) {
-                System.out.println("ERROR: Table failed to generate, try again please");
-            }
+            new File(databaseDir + SLASH + tableName).mkdirs();
+            new File(databaseDir + SLASH + tableName + INDEX_FILE).mkdirs();
 
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
                     databaseDir + SLASH + tableName + SCHEMA_DIR))) {
@@ -88,7 +81,6 @@ public class FileManager {
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
                     databaseDir + SLASH + tableName + TABLE_STATS))) {
                 out.writeObject(new TableStats(columnType, tableName));
-                System.out.println("Database '" + tableName + "' was created");
             }
         }
         else {
@@ -97,13 +89,13 @@ public class FileManager {
     }
 
     /**
-     * Adds a new row to a table and gives it a unique id
+     * Adds a new row to a table and gives it a unique id.
      * @param tableName Name of the table being inserted into
      * @param data Data being inserted
      * @throws IOException Produced by failed or interrupted I/O operations.
      * @throws ClassNotFoundException Thrown when no definition for the class with the specified name could be found.
      */
-    public static void createRow(String tableName, ArrayList<String> data) throws IOException, ClassNotFoundException {
+    public static void addRow(String tableName, ArrayList<String> data) throws IOException, ClassNotFoundException {
         // Check the database exists
         String databaseDir = getCurrentDataBaseDir();
 
@@ -126,7 +118,8 @@ public class FileManager {
         }
 
         TableStats tableStats;
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(databaseDir + TABLE_STATS))) {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(databaseDir + SLASH + tableName
+                + SLASH + TABLE_STATS))) {
             tableStats = (TableStats) in.readObject();
             tableStats.addRow();
         }
@@ -141,26 +134,17 @@ public class FileManager {
             page = (Page) in.readObject();
         }
 
-        //TODO Potentially unneeded, potentially need to make unique across all pages. TBD
-        // Get the new rows id
-        int id;
-        if (page.isEmpty()) {
-            id = 0;
-        }
-        else {
-            id = page.getLastRow().getId() + 1;
-        }
 
         // Add row to a new page, if last page is full
         if (page.isFull()) {
-            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(databaseDir + TABLE_STATS))) {
+            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(databaseDir + SLASH + tableName + TABLE_STATS))) {
                 tableStats = (TableStats) in.readObject();
                 tableStats.addPage();
             }
 
-            String newPageDir = lastPageDir.substring(0, lastPageDir.length() - 1) + fileNames.size();
+            String newPageDir = lastPageDir.substring(0, lastPageDir.length() - 1) + (fileNames.size() + PAGE_OFFSET);
             page = new Page();
-            page.addRow(new Row(id, convertedData));
+            page.addRow(new Row(convertedData));
 
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(newPageDir))) {
                 out.writeObject(page);
@@ -170,10 +154,9 @@ public class FileManager {
         }
 
         // Add row to the old page, if there is room
-        page.addRow(new Row(id, convertedData));
+        page.addRow(new Row(convertedData));
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(lastPageDir))) {
             out.writeObject(page);
-            System.out.println("Data was successfully added to '" + tableName + "'");
         }
     }
 

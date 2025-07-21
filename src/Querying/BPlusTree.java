@@ -32,7 +32,7 @@ public class BPlusTree implements Serializable {
         BPlusTreeNode node = root;
         while (!node.isLeaf) {
             int i = 0;
-            while (i < node.keys.size() && (BPlusTreeIndex.getInstance().compareOnPred(GREATER, key.getKey(), node.keys.get(i), keyType) ||
+            while (i < node.keys.size() && (BPlusTreeIndex.getInstance().compareOnPred(GREATER, key.getKey(), node.keys.get(i).getKey(), keyType) ||
                     BPlusTreeIndex.getInstance().compareOnPred(EQUAL, key.getKey(), node.keys.get(i), keyType))) {
                 i++;
             }
@@ -149,12 +149,12 @@ public class BPlusTree implements Serializable {
         // If the root splits, create a new root
         if (internal == root) {
             BPlusTreeNode newRoot = new BPlusTreeNode(false);
-            newRoot.keys.add(internal.keys.get(mid));
+            newRoot.keys.add(internal.keys.get(mid - 1));
             newRoot.children.add(internal);
             newRoot.children.add(newInternal);
             root = newRoot;
         } else {
-            insertIntoParent(internal, newInternal, internal.keys.remove(mid));
+            insertIntoParent(internal, newInternal, internal.keys.remove(mid - 1));
         }
     }
 

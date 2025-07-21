@@ -1,6 +1,8 @@
 package Querying;
 
-public class BPlusTreeKey implements Comparable<BPlusTreeKey>{
+import java.io.Serializable;
+
+public class BPlusTreeKey implements Comparable<BPlusTreeKey>, Serializable {
     private final Object key;
     private final String pageName;
     private final int index;

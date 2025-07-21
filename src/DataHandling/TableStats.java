@@ -1,6 +1,9 @@
 package DataHandling;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,7 +24,7 @@ public class TableStats implements Serializable {
     public TableStats(ArrayList<Class<?>> columnType, String tableName) {
         this.columnType = columnType;
         this.tableName = tableName;
-        for (int i=1; i<columnType.size(); i++) {
+        for (int i=0; i<columnType.size(); i++) {
             minValue.add(null);
             maxValue.add(null);
             unique.add(new HashSet<>());
@@ -59,14 +62,15 @@ public class TableStats implements Serializable {
     /**
      * Analyses the table and updates the table stats
      */
-    public void analyzeTable() {
+    public void analyzeTable() throws IOException {
         numRows = 0;
         numPages = 0;
-        String dir = FileManager.DATA_DIR + FileManager.SLASH + tableName;
-        for (int i=1; i<FileManager.getFileNames(dir).size()-NUM_NON_PAGES; i++) {
+        String tableDir = FileManager.getCurrentDataBaseDir() + FileManager.SLASH + tableName;
+
+        for (int i=1; i<=FileManager.getFileNames(tableDir).size()-NUM_NON_PAGES; i++) {
             numPages++;
             Page page;
-            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(dir + PAGE_DIR + i))) {
+            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(tableDir + PAGE_DIR + i))) {
                 page = (Page) in.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
@@ -74,6 +78,13 @@ public class TableStats implements Serializable {
             for (Row row: page.getRows()) {
                 analyseRow(row.getData());
             }
+        }
+        String statsDir = FileManager.getCurrentDataBaseDir() + FileManager.SLASH + tableName + "/tableStats";
+        Path filePath = Paths.get(statsDir);
+        Files.deleteIfExists(filePath);
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
+                statsDir))) {
+            out.writeObject(this);
         }
     }
 

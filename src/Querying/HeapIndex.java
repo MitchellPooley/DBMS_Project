@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 
 public class HeapIndex extends ParentIndex{
+    private static final String SCHEMA = "schema";
     private static HeapIndex heapIndex;
 
     /**
@@ -39,12 +40,19 @@ public class HeapIndex extends ParentIndex{
      * @param predicate Predicate of the selection (Equals, Greater, Lesser)
      * @param inclusive If the predicate is inclusive (Greater/Lesser Than or Equal)
      * @param value Value being selected for
-     * @param schema Schema of the table before selection
      * @param tableName Name of the table being selected over
      * @return QueryResult
      */
-    public QueryResult select(String indexName, String predicate, Boolean inclusive, Object value, Schema schema, String tableName) {
+    @Override
+    public QueryResult select(String indexName, String predicate, Boolean inclusive, Object value, String tableName) {
         String dir = FileManager.getCurrentDataBaseDir() + SLASH + tableName;
+
+        Schema schema;
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(dir + SLASH + SCHEMA))) {
+            schema = (Schema) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         QueryResult result = new QueryResult(schema);
 
         int colIndex = schema.getColumnName().indexOf(indexName);

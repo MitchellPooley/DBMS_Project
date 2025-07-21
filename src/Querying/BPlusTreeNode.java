@@ -5,10 +5,11 @@
 
 package Querying;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BPlusTreeNode {
+public class BPlusTreeNode implements Serializable {
     boolean isLeaf;
 
     List<BPlusTreeKey> keys;
