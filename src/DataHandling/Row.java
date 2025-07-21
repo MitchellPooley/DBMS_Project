@@ -4,19 +4,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Row implements Serializable {
-    private int id;
     private ArrayList<Object> data = new ArrayList<>();
 
-    public Row(int id, ArrayList<Object> data) {
-        this.id = id;
+    public Row(ArrayList<Object> data) {
         this.data = data;
     }
-
-    /**
-     * Returns a rows id.
-     * @return integer row id
-     */
-    public int getId() { return id;}
 
     /**
      * Returns the rows data.

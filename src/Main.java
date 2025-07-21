@@ -10,16 +10,9 @@ public class Main {
         // Ensure data file exists and create a new file if not
         new File("./data").mkdirs();
 
-        ArrayList<String> columnNames = new ArrayList<>();
-        columnNames.add("Boolean");
-        ArrayList<Class<?>> columnType = new ArrayList<>();
-        columnType.add(Boolean.class);
-        ArrayList<String> data = new ArrayList<>();
-        data.add("false");
-
-        FileManager.createDataBase("DB");
-        FileManager.setCurrentDataBaseDir("DB");
-        FileManager.createTable( "Table", columnNames, columnType);
-        FileManager.createRow( "Table", data);
+        Test test = new Test();
+        if (test.RunTest()) {
+            System.out.println("All tests pass");
+        }
     }
 }

@@ -1,6 +1,9 @@
 package DataHandling;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,37 +24,53 @@ public class TableStats implements Serializable {
     public TableStats(ArrayList<Class<?>> columnType, String tableName) {
         this.columnType = columnType;
         this.tableName = tableName;
-        for (int i=1; i<columnType.size(); i++) {
+        for (int i=0; i<columnType.size(); i++) {
             minValue.add(null);
             maxValue.add(null);
             unique.add(new HashSet<>());
         }
     }
 
+    /**
+     * Increases the count of rows
+     */
     public void addRow() {
         numRows++;
     }
 
+    /**
+     * Decreases the count of rows
+     */
     public void removeRow() {
         numRows--;
     }
 
+    /**
+     * Increases the count of pages
+     */
     public void addPage() {
         numPages++;
     }
 
+    /**
+     * Decreases the count of pages
+     */
     public void removePage() {
         numPages--;
     }
 
-    public void analyzeTable() {
+    /**
+     * Analyses the table and updates the table stats
+     */
+    public void analyzeTable() throws IOException {
         numRows = 0;
         numPages = 0;
-        String dir = FileManager.DATA_DIR + FileManager.SLASH + tableName;
-        for (int i=1; i<FileManager.getFileNames(dir).size()-NUM_NON_PAGES; i++) {
+        String tableDir = FileManager.getCurrentDataBaseDir() + FileManager.SLASH + tableName;
+
+        for (int i=1; i<=FileManager.getFileNames(tableDir).size()-NUM_NON_PAGES; i++) {
             numPages++;
             Page page;
-            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(dir + PAGE_DIR + i))) {
+            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(tableDir + PAGE_DIR + i))) {
                 page = (Page) in.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
@@ -60,8 +79,19 @@ public class TableStats implements Serializable {
                 analyseRow(row.getData());
             }
         }
+        String statsDir = FileManager.getCurrentDataBaseDir() + FileManager.SLASH + tableName + "/tableStats";
+        Path filePath = Paths.get(statsDir);
+        Files.deleteIfExists(filePath);
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
+                statsDir))) {
+            out.writeObject(this);
+        }
     }
-    
+
+    /**
+     * Updates table stats for a single row.
+     * @param data Data from a single row
+     */
     private void analyseRow(ArrayList<Object> data) {
         numRows++;
         for (int i=0; i<data.size(); i++) {
@@ -97,13 +127,39 @@ public class TableStats implements Serializable {
         }
     }
 
+    /**
+     * Gets the minValue in each column.
+     * @return Arraylist of values
+     */
     public ArrayList<Object> getMinValue() { return minValue;}
 
+    /**
+     * Gets the maxValue in each column.
+     * @return Arraylist of values
+     */
     public ArrayList<Object> getMaxValue() { return maxValue;}
 
+    /**
+     * Gets the unique values in the table.
+     * @return ArrayList of sets containing each value.
+     */
     public ArrayList<Set<Object>> getUnique() { return unique;}
 
+    /**
+     * Gets the number of rows in the table,
+     * @return int number of rows
+     */
     public int getNumRows() { return numRows;}
 
+    /**
+     * Gets the number of pages in the table,
+     * @return int number of pages
+     */
     public int getNumPages() { return numPages;}
+
+    /**
+     * Gets the tables column types,
+     * @return ArrayList of Classes
+     */
+    public ArrayList<Class<?>> getColumnType() { return columnType;}
 }

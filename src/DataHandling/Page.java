@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Page implements Serializable {
-    private static final int MAX_ROWS = 5;
+    public  static final int MAX_ROWS = 5;
     private static final int LAST_ROW = -1;
 
     private final ArrayList<Row> rows = new ArrayList<>();
